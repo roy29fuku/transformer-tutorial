@@ -1,9 +1,13 @@
 """
 BC4CHEMDを使ったfine tuning
+$ export COMET_API_KEY=xxxxxx
+$ export COMET_PROJECT_NAME=hf_tr_fine_tune_BC4CHEMD
+$ python fine_tune_bc4chemd.py 1
 
 オリジナルデータ
 https://biocreative.bioinformatics.udel.edu/tasks/biocreative-iv/chemdner/
 """
+import argparse
 from datetime import datetime
 from pathlib import Path
 import re
@@ -66,6 +70,11 @@ class BC4CHEMDDataset(torch.utils.data.Dataset):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('epoch', type=int)
+    args = parser.parse_args()
+    epoch = args.epoch
+
     model_name = 'distilbert-base-cased'
     train_texts, train_tags = read(DATA_DIR + 'train.tsv')
     val_texts, val_tags = read(DATA_DIR + 'devel.tsv')
@@ -111,7 +120,7 @@ if __name__ == '__main__':
     model = DistilBertForTokenClassification.from_pretrained(model_name, num_labels=len(unique_tags), id2label=id2tag)
     training_args = TrainingArguments(
         output_dir='./results',  # output directory
-        num_train_epochs=1,  # total number of training epochs
+        num_train_epochs=epoch,  # total number of training epochs
         per_device_train_batch_size=16,  # batch size per device during training
         per_device_eval_batch_size=64,  # batch size for evaluation
         warmup_steps=500,  # number of warmup steps for learning rate scheduler
