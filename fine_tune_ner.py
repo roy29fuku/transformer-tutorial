@@ -5,8 +5,8 @@ $ export COMET_PROJECT_NAME=hf_tr_fine_tune_BC4CHEMD
 
 epoch 1, --sampleで回せばとりあえず動くか確認できる
 $ python fine_tune_bc4chemd.py [model] [dataset] [epoch] [--sample]
-$ python fine_tune_ner.py "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext" bc4chemd 1 --sample
-$ python fine_tune_ner.py "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext" bc5cdr-chem 1 --sample
+$ python fine_tune_ner.py --epoch 5
+$ python fine_tune_ner.py --sample
 
 オリジナルデータ
 https://biocreative.bioinformatics.udel.edu/tasks/biocreative-iv/chemdner/
