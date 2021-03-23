@@ -13,15 +13,17 @@ https://biocreative.bioinformatics.udel.edu/tasks/biocreative-iv/chemdner/
 """
 import argparse
 from datetime import datetime
+import os
 from pathlib import Path
 import re
 
 import comet_ml
+from dotenv import load_dotenv
 import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification, Trainer, TrainingArguments
 
-DATA_DIR = Path('data/')
+load_dotenv()
 
 
 def read(file_path):
@@ -75,23 +77,25 @@ class BC4CHEMDDataset(torch.utils.data.Dataset):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('model', type=str, default='distilbert-base-cased', choices=[
-        'distilbert-base-cased',
-        'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext'
-    ])
-    parser.add_argument('dataset', type=str, default='bc5cdr-chem', choices=[
+    parser.add_argument(
+        '--model', type=str, default='microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext', choices=[
+            'distilbert-base-cased',
+            'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext'
+        ]
+    )
+    parser.add_argument('--dataset', type=str, default='bc5cdr-chem', choices=[
         'bc4chemd',
         'bc5cdr-chem'
     ])
-    parser.add_argument('epoch', type=int)
+    parser.add_argument('--epoch', type=int, default=1)
     parser.add_argument('--sample', action='store_true')
     args = parser.parse_args()
     model_name = args.model
     dataset = args.dataset
     if dataset == 'bc4chemd':
-        data_dir = DATA_DIR / 'BC4CHEMD'
+        data_dir = Path(os.environ.get('BC4CHEMD_DIR'))
     elif dataset == 'bc5cdr-chem':
-        data_dir = DATA_DIR / 'BC5CDR-chem'
+        data_dir = Path(os.environ.get('BC5CDR_CHEM_DIR'))
     else:
         raise ValueError(f'{dataset=} is not available.')
     epoch = args.epoch
