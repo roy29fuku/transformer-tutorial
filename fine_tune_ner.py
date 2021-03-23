@@ -1,11 +1,11 @@
 """
-BC4CHEMDを使ったfine tuning
+BC4CHEMD, BC5CDR-chemを使って薬剤名のNERにfine tuning
 $ export COMET_API_KEY=xxxxxx
 $ export COMET_PROJECT_NAME=hf_tr_fine_tune_BC4CHEMD
 
 epoch 1, --sampleで回せばとりあえず動くか確認できる
-$ python fine_tune_bc4chemd.py "distilbert-base-cased" 1 --sample
-$ python fine_tune_bc4chemd.py "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext" 1 --sample
+$ python fine_tune_bc4chemd.py [model] [dataset] [epoch] [--sample]
+$ python fine_tune_ner.py "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext" bc4chemd 1 --sample
 
 オリジナルデータ
 https://biocreative.bioinformatics.udel.edu/tasks/biocreative-iv/chemdner/
@@ -20,7 +20,7 @@ import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification, Trainer, TrainingArguments
 
-DATA_DIR = 'data/BC4CHEMD/'
+DATA_DIR = Path('data/')
 
 
 def read(file_path):
@@ -78,16 +78,27 @@ if __name__ == '__main__':
         'distilbert-base-cased',
         'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext'
     ])
+    parser.add_argument('dataset', type=str, default='bc5cdr-chem', choices=[
+        'bc4chemd',
+        'bc5cdr-chem'
+    ])
     parser.add_argument('epoch', type=int)
     parser.add_argument('--sample', action='store_true')
     args = parser.parse_args()
     model_name = args.model
+    dataset = args.dataset
+    if dataset == 'bc4chemd':
+        data_dir = DATA_DIR / 'BC4CHEMD'
+    elif dataset == 'bc5cdr-chem':
+        data_dir = DATA_DIR / 'BC5CDR-chem'
+    else:
+        raise ValueError(f'{dataset=} is not available.')
     epoch = args.epoch
     sample = args.sample
 
-    train_texts, train_tags = read(DATA_DIR + 'train.tsv')
-    val_texts, val_tags = read(DATA_DIR + 'devel.tsv')
-    test_texts, test_tags = read(DATA_DIR + 'train.tsv')
+    train_texts, train_tags = read(data_dir / 'train.tsv')
+    val_texts, val_tags = read(data_dir / 'devel.tsv')
+    test_texts, test_tags = read(data_dir / 'train.tsv')
     train_texts = train_texts + val_texts
     train_tags = train_tags + val_tags
 
@@ -149,6 +160,6 @@ if __name__ == '__main__':
 
     trainer.evaluate()
 
-    save_dir = 'models/bc4chemd/' + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    save_dir = f'models/{dataset}/' + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     tokenizer.save_pretrained(save_dir)
     model.save_pretrained(save_dir)
