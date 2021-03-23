@@ -15,6 +15,8 @@ from sklearn.model_selection import train_test_split
 import torch
 from transformers import DistilBertTokenizerFast, DistilBertForTokenClassification, Trainer, TrainingArguments
 
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
 
 def read_wnut(file_path):
     file_path = Path(file_path)

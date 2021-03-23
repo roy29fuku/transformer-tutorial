@@ -2,7 +2,10 @@
 BC4CHEMDを使ったfine tuning
 $ export COMET_API_KEY=xxxxxx
 $ export COMET_PROJECT_NAME=hf_tr_fine_tune_BC4CHEMD
-$ python fine_tune_bc4chemd.py 1
+
+epoch 1, --sampleで回せばとりあえず動くか確認できる
+$ python fine_tune_bc4chemd.py "distilbert-base-cased" 1 --sample
+$ python fine_tune_bc4chemd.py "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext" 1 --sample
 
 オリジナルデータ
 https://biocreative.bioinformatics.udel.edu/tasks/biocreative-iv/chemdner/
@@ -15,7 +18,7 @@ import re
 import comet_ml
 import numpy as np
 import torch
-from transformers import DistilBertTokenizerFast, DistilBertForTokenClassification, Trainer, TrainingArguments
+from transformers import AutoTokenizer, AutoModelForTokenClassification, Trainer, TrainingArguments
 
 DATA_DIR = 'data/BC4CHEMD/'
 
@@ -71,11 +74,17 @@ class BC4CHEMDDataset(torch.utils.data.Dataset):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('model', type=str, default='distilbert-base-cased', choices=[
+        'distilbert-base-cased',
+        'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext'
+    ])
     parser.add_argument('epoch', type=int)
+    parser.add_argument('--sample', action='store_true')
     args = parser.parse_args()
+    model_name = args.model
     epoch = args.epoch
+    sample = args.sample
 
-    model_name = 'distilbert-base-cased'
     train_texts, train_tags = read(DATA_DIR + 'train.tsv')
     val_texts, val_tags = read(DATA_DIR + 'devel.tsv')
     test_texts, test_tags = read(DATA_DIR + 'train.tsv')
@@ -84,22 +93,23 @@ if __name__ == '__main__':
 
     # 長すぎる文章があると失敗するので除外
     # https://github.com/huggingface/transformers/issues/5611
-    train_texts = [t for t in train_texts if len(t) < 200]
-    train_tags = [t for t in train_tags if len(t) < 200]
-    test_texts = [t for t in test_texts if len(t) < 200]
-    test_tags = [t for t in test_tags if len(t) < 200]
+    if sample:
+        train_texts = [t for t in train_texts if len(t) < 200]
+        train_tags = [t for t in train_tags if len(t) < 200]
+        test_texts = [t for t in test_texts if len(t) < 200]
+        test_tags = [t for t in test_tags if len(t) < 200]
 
     # 少量データでチェック
-    # train_texts = train_texts[:80]
-    # train_tags = train_tags[:80]
-    # test_texts = test_texts[:20]
-    # test_tags = test_tags[:20]
+    train_texts = train_texts[:80]
+    train_tags = train_tags[:80]
+    test_texts = test_texts[:20]
+    test_tags = test_tags[:20]
 
     unique_tags = set(tag for doc in train_tags + test_tags for tag in doc)
     tag2id = {tag: id for id, tag in enumerate(unique_tags)}
     id2tag = {id: tag for tag, id in tag2id.items()}
 
-    tokenizer = DistilBertTokenizerFast.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_encodings = tokenizer(
         train_texts, is_split_into_words=True, return_offsets_mapping=True,
         padding=True, truncation=True, max_length=1024
@@ -117,7 +127,7 @@ if __name__ == '__main__':
     train_dataset = BC4CHEMDDataset(train_encodings, train_labels)
     test_dataset = BC4CHEMDDataset(test_encodings, test_labels)
 
-    model = DistilBertForTokenClassification.from_pretrained(model_name, num_labels=len(unique_tags), id2label=id2tag)
+    model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=len(unique_tags), id2label=id2tag)
     training_args = TrainingArguments(
         output_dir='./results',  # output directory
         num_train_epochs=epoch,  # total number of training epochs
