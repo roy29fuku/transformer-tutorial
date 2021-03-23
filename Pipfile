@@ -12,6 +12,7 @@ comet-ml = "==3.6.0"
 jupyter = "==1.0.0"
 scikit-learn = "==0.24.1"
 numpy = "==1.20.1"
+python-dotenv = "==0.15.0"
 
 [requires]
 python_version = "3.8"
