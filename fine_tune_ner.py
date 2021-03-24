@@ -153,6 +153,7 @@ if __name__ == '__main__':
         weight_decay=0.01,  # strength of weight decay
         logging_dir='./logs',  # directory for storing logs
         logging_steps=10,
+        save_steps=5000,
     )
     trainer = Trainer(
         model=model,  # the instantiated 🤗 Transformers model to be trained
