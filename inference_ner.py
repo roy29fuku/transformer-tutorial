@@ -36,16 +36,19 @@ def get_chemicals(file_path):
                 start = res['start']
                 end = res['end']
 
+                if ent == 'I':
+                    try:
+                        if start == prev_end:
+                            chemical += re.sub('^##', '', word)
+                        else:
+                            chemical += ' ' + word
+                    except UnboundLocalError:
+                        ent = 'B'  # Iから始まっていた場合はそれをBと見なす
                 if ent == 'B':
                     if chemical != '':
                         chemicals.add(chemical)
                         chemical = ''
                     chemical += word
-                if ent == 'I':
-                    if start == prev_end:
-                        chemical += re.sub('^##', '', word)
-                    else:
-                        chemical += ' ' + word
 
                 prev_end = end
 
