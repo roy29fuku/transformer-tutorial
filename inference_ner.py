@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 
 load_dotenv()
+MODEL_DIR = Path(os.environ.get('MODEL_DIR'))
+PAPER_DIR = Path(os.environ.get('PAPER_DIR'))
+RESULT_DIR = Path(os.environ.get('RESULT_DIR'))
 
 
 def get_chemicals(file_path):
@@ -54,25 +57,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default='bc5cdr-chem/2021_03_25_02_11_06/')
     args = parser.parse_args()
-    load_dir = Path(os.getenv('MODEL_DIR')) / args.model
+    load_dir = MODEL_DIR / args.model
 
     tokenizer = AutoTokenizer.from_pretrained(load_dir)
     model = AutoModelForTokenClassification.from_pretrained(load_dir)
     ner = pipeline('ner', model=model, tokenizer=tokenizer)
 
     pmcid2chemicals = {}
-    paper_dir = Path(os.environ.get('PAPER_DIR'))
-    file_paths = list(paper_dir.glob('*.json'))
-    print(len(file_paths))
-    for file_path in file_paths[:5]:
+    for file_path in PAPER_DIR.glob('*.json'):
         chemicals = get_chemicals(file_path)
         pmcid = file_path.stem
         pmcid2chemicals[pmcid] = chemicals
 
-    # for file_path in paper_dir.glob('*.json'):
-    #     chemicals = get_chemicals(file_path)
-    #     pmcid = file_path.stem
-    #     pmcid2chemicals[pmcid] = chemicals
-
-    with open('pmcid2chemicals.json', 'w') as f:
-        json.dump(pmcid2chemicals, f, indent=4, ensure_ascii=False)
+    with open(RESULT_DIR / 'pmcid2chemicals.json', 'w') as f:
+        json.dump(pmcid2chemicals, f, ensure_ascii=False)
