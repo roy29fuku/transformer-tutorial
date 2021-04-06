@@ -24,6 +24,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification, Trainer, TrainingArguments
 
 load_dotenv()
+MODEL_DIR = Path(os.getenv('MODEL_DIR'))
 
 
 def read(file_path):
@@ -76,7 +77,7 @@ class BC4CHEMDDataset(torch.utils.data.Dataset):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         '--model', type=str, default='microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext', choices=[
             'distilbert-base-cased',
@@ -166,6 +167,7 @@ if __name__ == '__main__':
 
     trainer.evaluate()
 
-    save_dir = f'models/{dataset}/' + datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    date = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    save_dir = MODEL_DIR / dataset / date
     tokenizer.save_pretrained(save_dir)
     model.save_pretrained(save_dir)
