@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 
 from dotenv import load_dotenv
+from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 
 load_dotenv()
@@ -64,7 +65,8 @@ if __name__ == '__main__':
     ner = pipeline('ner', model=model, tokenizer=tokenizer)
 
     pmcid2chemicals = {}
-    for file_path in PAPER_DIR.glob('*.json'):
+    file_path_list = list(PAPER_DIR.glob('*.json'))
+    for file_path in tqdm(file_path_list):
         chemicals = get_chemicals(file_path)
         pmcid = file_path.stem
         pmcid2chemicals[pmcid] = chemicals
