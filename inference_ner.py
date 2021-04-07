@@ -68,11 +68,17 @@ if __name__ == '__main__':
     ner = pipeline('ner', model=model, tokenizer=tokenizer)
 
     pmcid2chemicals = {}
+    error_pmcids = []
     file_path_list = list(PAPER_DIR.glob('*.json'))
     for file_path in tqdm(file_path_list):
-        chemicals = get_chemicals(file_path)
-        pmcid = file_path.stem
-        pmcid2chemicals[pmcid] = chemicals
+        try:
+            chemicals = get_chemicals(file_path)
+            pmcid = file_path.stem
+            pmcid2chemicals[pmcid] = chemicals
+        except:
+            error_pmcids.append(file_path.stem)
 
     with open(RESULT_DIR / 'pmcid2chemicals.json', 'w') as f:
         json.dump(pmcid2chemicals, f, ensure_ascii=False)
+    with open(RESULT_DIR / 'error_pmcids.json', 'w') as f:
+        json.dump(error_pmcids, f, ensure_ascii=False)
